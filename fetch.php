@@ -13,18 +13,18 @@ function get_credentials() {
             $token = str_replace('"', '', $a[1]);
         }
     }
-    return implode(' ', [$user, $token]);
+    return implode(':', [$user, $token]);
 }
 
 function fetch($url) {
     $curl_request = curl_init();
     curl_setopt($curl_request, CURLOPT_URL, $url);
-    // curl_setopt($curl_request, CURLOPT_USERPWD, get_credentials());
+    curl_setopt($curl_request, CURLOPT_USERPWD, get_credentials());
     curl_setopt($curl_request, CURLOPT_HTTPHEADER, [
         'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:28.0) Gecko/20100101 Firefox/28.0',
-        "Authorization: ". get_credentials() ."",
-        "Accept: application/vnd.github+json",
-        "X-GitHub-Api-Version: 2022-11-28"
+        // "Authorization: ". get_credentials() ."",
+        // "Accept: application/vnd.github+json",
+        // "X-GitHub-Api-Version: 2022-11-28"
     ]);
 
     curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, true);
@@ -41,7 +41,8 @@ function fetch_json($url) {
 }
 
 function dump_json($json) {
-    echo json_encode($json, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE);
+    $string = json_encode($json, JSON_PRETTY_PRINT + JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE);
+    file_put_contents('modules.txt', $string, FILE_APPEND);
 }
 
 function packagist_to_github($packagist) {
@@ -70,7 +71,7 @@ function packagist_to_github($packagist) {
 }
 
 function getComposerRequire($composer) {
-    return $composer["require"];
+    return $composer->require;
 }
 
 function outputFormat($name, $version, $composer) {
