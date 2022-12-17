@@ -1,5 +1,7 @@
 <?php
 
+include './modules.php';
+
 function get_credentials() {
     $s = file_get_contents('.env');
     $s = trim($s);
@@ -67,11 +69,20 @@ function packagist_to_github($packagist) {
     if ($account == 'tractorcow' && $repo == 'silverstripe-fluent') {
         $account = 'tractorcow-farm';
     }
-    return "$account/$repo";
+    $arr = [
+        "cc" => "creative-commoners/$repo",
+        "ss" => "$account/$repo"
+    ];
+    return $arr;
+    // return "$account/$repo";
 }
 
 function getComposerRequire($composer) {
-    return $composer->require;
+    $arr = [
+        'require' => $composer->require,
+        'require-dev' => $composer->{'require-dev'},
+    ];
+    return $arr;
 }
 
 function outputFormat($name, $version, $composer) {
@@ -99,120 +110,17 @@ function identifyLastBranch($array) {
     return $currentLast;
 }
 
-$modules = [
-    'bringyourownideas/silverstripe-maintenance',
-    'bringyourownideas/silverstripe-composer-update-checker',
-    'colymba/gridfield-bulk-editing-tools',
-    'composer/installers',
-    'cwp/agency-extensions',
-    'cwp/cwp',
-    'cwp/cwp-core',
-    'cwp/cwp-search',
-    'cwp/starter-theme',
-    'cwp/watea-theme',
-    'cwp-themes/default',
-    'dnadesign/silverstripe-elemental',
-    'dnadesign/silverstripe-elemental-subsites',
-    'dnadesign/silverstripe-elemental-userforms',
-    'lekoala/silverstripe-debugbar',
-    'silverstripe/activedirectory',
-    'silverstripe/admin',
-    'silverstripe/asset-admin',
-    'silverstripe/assets',
-    'silverstripe/auditor',
-    'silverstripe/behat-extension',
-    'silverstripe/blog',
-    'silverstripe/campaign-admin',
-    'silverstripe/ckan-registry',
-    'silverstripe/cms',
-    'silverstripe/comment-notifications',
-    'silverstripe/comments',
-    'silverstripe/config',
-    'silverstripe/content-widget',
-    'silverstripe/contentreview',
-    'silverstripe/crontask',
-    'silverstripe/documentconverter',
-    'silverstripe/elemental-bannerblock',
-    'silverstripe/elemental-fileblock',
-    'silverstripe/environmentcheck',
-    'silverstripe/errorpage',
-    'silverstripe/eslint-config',
-    'silverstripe/externallinks',
-    'silverstripe/framework',
-    'silverstripe/fulltextsearch',
-    'silverstripe/graphql',
-    'silverstripe/graphql-devtools',
-    'silverstripe/gridfieldqueuedexport',
-    'silverstripe/html5',
-    'silverstripe/hybridsessions',
-    'silverstripe/iframe',
-    'silverstripe/installer',
-    'silverstripe/ldap',
-    'silverstripe/lumberjack',
-    'silverstripe/mimevalidator',
-    'silverstripe/postgresql',
-    'silverstripe/realme',
-    'silverstripe/session-manager',
-    'silverstripe/recipe-authoring-tools',
-    'silverstripe/recipe-blog',
-    'silverstripe/recipe-ccl',
-    'silverstripe/recipe-cms',
-    'silverstripe/recipe-collaboration',
-    'silverstripe/recipe-content-blocks',
-    'silverstripe/recipe-core',
-    'silverstripe/recipe-form-building',
-    'silverstripe/recipe-plugin',
-    'silverstripe/recipe-reporting-tools',
-    'silverstripe/recipe-services',
-    'silverstripe/recipe-solr-search',
-    'silverstripe/registry',
-    'silverstripe/reports',
-    'silverstripe/restfulserver',
-    'silverstripe/securityreport',
-    'silverstripe/segment-field',
-    'silverstripe/sharedraftcontent',
-    'silverstripe/siteconfig',
-    'silverstripe/sitewidecontent-report',
-    'silverstripe/spamprotection',
-    'silverstripe/sqlite3',
-    'silverstripe/sspak',
-    'silverstripe/staticpublishqueue',
-    'silverstripe/subsites',
-    'silverstripe/tagfield',
-    'silverstripe/taxonomy',
-    'silverstripe/textextraction',
-    'silverstripe/userforms',
-    'silverstripe/vendor-plugin',
-    'silverstripe/versioned',
-    'silverstripe/versioned-admin',
-    'silverstripe/versionfeed',
-    'silverstripe/widgets',
-    'silverstripe/webpack-config',
-    'silverstripe-themes/simple',
-    'symbiote/silverstripe-advancedworkflow',
-    'symbiote/silverstripe-gridfieldextensions',
-    'symbiote/silverstripe-multivaluefield',
-    'symbiote/silverstripe-queuedjobs',
-    'tractorcow/classproxy',
-    'tractorcow/silverstripe-fluent',
-    'tractorcow/silverstripe-proxy-db',
-    'undefinedoffset/sortablegridfield',
-    'silverstripe/mfa',
-    'silverstripe/totp-authenticator',
-    'silverstripe/webauthn-authenticator',
-    'silverstripe/login-forms',
-    'silverstripe/security-extensions',
-];
-
 foreach ($modules as $packagist) {
-    $github = packagist_to_github($packagist);
+    $githubSS = packagist_to_github($packagist)["ss"];
+    $githubCC = packagist_to_github($packagist)["cc"];
 
     // fetch data from github API
-    $json = fetch_json("https://api.github.com/repos/$github/branches");
+    $json = fetch_json("https://api.github.com/repos/$githubSS/branches");
     $lastVersion = identifyLastBranch($json);
 
     //fetch raw file from github
-    $j = fetch_json("https://raw.githubusercontent.com/$github/$lastVersion/composer.json");
+    // $j = fetch_json("https://raw.githubusercontent.com/$github/$lastVersion/composer.json");
+    $j = fetch_json("https://raw.githubusercontent.com/$githubCC/pulls/$lastVersion/upgrade-cms5/composer.json");
     
-    dump_json(outputFormat($github, $lastVersion, $j));
+    dump_json(outputFormat($githubSS, $lastVersion, $j));
 }
